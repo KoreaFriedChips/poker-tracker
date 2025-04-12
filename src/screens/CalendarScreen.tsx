@@ -12,9 +12,7 @@ import { Calendar, DateData } from 'react-native-calendars';
 import { useNavigation } from '@react-navigation/native';
 import { RootStackScreenProps } from '../types/navigation';
 import { useSessions } from '../context/SessionsContext';
-import { PokerSession, HandHistory } from '../types';
-import { Card } from 'react-native-paper';
-import { format } from 'date-fns';
+import { PokerSession } from '../types';
 
 interface DayProfit {
   profit: number;
@@ -36,50 +34,6 @@ interface MarkedDates {
     }>;
   };
 }
-
-const HandHistoryCard: React.FC<{ handHistory: HandHistory }> = ({ handHistory }) => (
-  <Card style={styles.handHistoryCard}>
-    <Card.Content>
-      <Text style={styles.streetLabel}>Preflop:</Text>
-      <Text style={styles.streetText}>{handHistory.preflop}</Text>
-      
-      {handHistory.flop && (
-        <>
-          <Text style={styles.streetLabel}>Flop:</Text>
-          <Text style={styles.streetText}>{handHistory.flop}</Text>
-        </>
-      )}
-      
-      {handHistory.turn && (
-        <>
-          <Text style={styles.streetLabel}>Turn:</Text>
-          <Text style={styles.streetText}>{handHistory.turn}</Text>
-        </>
-      )}
-      
-      {handHistory.river && (
-        <>
-          <Text style={styles.streetLabel}>River:</Text>
-          <Text style={styles.streetText}>{handHistory.river}</Text>
-        </>
-      )}
-      
-      {handHistory.result && (
-        <>
-          <Text style={styles.streetLabel}>Result:</Text>
-          <Text style={styles.streetText}>{handHistory.result}</Text>
-        </>
-      )}
-      
-      {handHistory.notes && (
-        <>
-          <Text style={styles.streetLabel}>Notes:</Text>
-          <Text style={styles.streetText}>{handHistory.notes}</Text>
-        </>
-      )}
-    </Card.Content>
-  </Card>
-);
 
 const CalendarScreen = () => {
   const navigation = useNavigation<RootStackScreenProps<'MainTabs'>['navigation']>();
@@ -189,44 +143,6 @@ const CalendarScreen = () => {
     setCurrentMonth(new Date(month.timestamp));
   };
 
-  const renderHandHistory = (hand: HandHistory) => {
-    return (
-      <View key={hand.id} style={styles.handHistory}>
-        <Text style={styles.handAction}>
-          <Text style={styles.handLabel}>Preflop: </Text>
-          {hand.preflop}
-        </Text>
-        {hand.flop && (
-          <Text style={styles.handAction}>
-            <Text style={styles.handLabel}>Flop: </Text>
-            {hand.flop}
-          </Text>
-        )}
-        {hand.turn && (
-          <Text style={styles.handAction}>
-            <Text style={styles.handLabel}>Turn: </Text>
-            {hand.turn}
-          </Text>
-        )}
-        {hand.river && (
-          <Text style={styles.handAction}>
-            <Text style={styles.handLabel}>River: </Text>
-            {hand.river}
-          </Text>
-        )}
-        {hand.result && (
-          <Text style={styles.handAction}>
-            <Text style={styles.handLabel}>Result: </Text>
-            {hand.result}
-          </Text>
-        )}
-        {hand.notes && (
-          <Text style={styles.handNotes}>{hand.notes}</Text>
-        )}
-      </View>
-    );
-  };
-
   const renderSessionItem = (session: PokerSession) => {
     const profit = session.cashOut - session.buyIn;
     return (
@@ -248,27 +164,9 @@ const CalendarScreen = () => {
             hour12: true 
           })}
         </Text>
-        {session.notes && (
-          <Text style={styles.sessionNotes}>{session.notes}</Text>
-        )}
-        {session.handHistories && session.handHistories.length > 0 && (
-          <View style={styles.handHistoriesContainer}>
-            <Text style={styles.handHistoriesTitle}>Hand Histories</Text>
-            {session.handHistories.map(renderHandHistory)}
-          </View>
-        )}
       </TouchableOpacity>
     );
   };
-
-  const groupedSessions = sessions.reduce((acc, session) => {
-    const date = format(new Date(session.startTime), 'yyyy-MM-dd');
-    if (!acc[date]) {
-      acc[date] = [];
-    }
-    acc[date].push(session);
-    return acc;
-  }, {} as Record<string, typeof sessions>);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -355,35 +253,6 @@ const CalendarScreen = () => {
             {selectedSessions.map(renderSessionItem)}
           </View>
         )}
-
-        {Object.entries(groupedSessions).map(([date, dateSessions]) => (
-          <View key={date} style={styles.dateGroup}>
-            <Text style={styles.dateHeader}>{format(new Date(date), 'MMMM d, yyyy')}</Text>
-            {dateSessions.map(session => (
-              <Card key={session.id} style={styles.sessionCard}>
-                <Card.Content>
-                  <Text style={styles.sessionHeader}>
-                    {session.location} - {session.stakes}
-                  </Text>
-                  <Text style={styles.sessionTime}>
-                    {format(new Date(session.startTime), 'h:mm a')} - {format(new Date(session.endTime), 'h:mm a')}
-                  </Text>
-                  <Text style={[styles.sessionResult, session.cashOut - session.buyIn > 0 ? styles.profit : styles.loss]}>
-                    ${(session.cashOut - session.buyIn).toFixed(2)}
-                  </Text>
-                  {session.handHistories.length > 0 && (
-                    <View style={styles.handHistoriesContainer}>
-                      <Text style={styles.handHistoriesHeader}>Hand Histories:</Text>
-                      {session.handHistories.map((history) => (
-                        <HandHistoryCard key={history.id} handHistory={history} />
-                      ))}
-                    </View>
-                  )}
-                </Card.Content>
-              </Card>
-            ))}
-          </View>
-        ))}
       </ScrollView>
     </SafeAreaView>
   );
@@ -505,88 +374,6 @@ const styles = StyleSheet.create({
   profit: {
     fontSize: 16,
     fontWeight: 'bold',
-  },
-  sessionNotes: {
-    fontSize: 14,
-    color: '#666',
-    fontStyle: 'italic',
-    marginTop: 8,
-    marginBottom: 12,
-  },
-  handHistoriesContainer: {
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
-  },
-  handHistoriesTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 8,
-    color: '#333',
-  },
-  handHistory: {
-    backgroundColor: '#f8f9fa',
-    padding: 12,
-    borderRadius: 6,
-    marginBottom: 8,
-  },
-  handAction: {
-    fontSize: 14,
-    color: '#333',
-    marginBottom: 4,
-  },
-  handLabel: {
-    fontWeight: '600',
-    color: '#666',
-  },
-  handNotes: {
-    fontSize: 14,
-    color: '#666',
-    fontStyle: 'italic',
-    marginTop: 4,
-  },
-  dateGroup: {
-    marginBottom: 20,
-    paddingHorizontal: 16,
-  },
-  dateHeader: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    color: '#333',
-  },
-  sessionCard: {
-    marginBottom: 10,
-    elevation: 2,
-  },
-  sessionTime: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 5,
-  },
-  sessionResult: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  loss: {
-    color: '#e74c3c',
-  },
-  handHistoryCard: {
-    marginVertical: 5,
-    backgroundColor: '#f8f9fa',
-  },
-  streetLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#666',
-    marginTop: 5,
-  },
-  streetText: {
-    fontSize: 14,
-    color: '#333',
-    marginBottom: 5,
   },
 });
 

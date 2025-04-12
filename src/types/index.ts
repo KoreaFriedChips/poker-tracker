@@ -13,11 +13,11 @@ export interface PokerSession {
 export interface HandHistory {
   id: string;
   preflop: string;
-  flop?: string;
-  turn?: string;
-  river?: string;
-  result?: string;
-  notes?: string;
+  flop: string;
+  turn: string;
+  river: string;
+  result: string;
+  notes: string;
 }
 
 export interface SessionStats {
